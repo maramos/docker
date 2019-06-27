@@ -1,0 +1,66 @@
+version: '2.2'
+services:
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.0.1
+    container_name: kibana
+    environment:
+      - ELASTICSEARCH_URL="http://elasticsearch:9200"
+    volumes:
+      - ./kibana.yml:/usr/share/kibana/config/kibana.yml
+    ports:
+      - 5601:5601
+    depends_on:
+      - elasticsearch
+        #      - elasticsearch2
+    networks:
+      - esnet
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.0.1
+    container_name: elasticsearch
+    environment:
+      - cluster.name=docker-cluster
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms1048m -Xmx1048m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - esdata1:/usr/share/elasticsearch/data
+      - ./elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - ./hosts:/etc/hosts
+    ports:
+      - 9200:9200
+    networks:
+      - esnet
+
+        #  elasticsearch2:
+        #    image: docker.elastic.co/elasticsearch/elasticsearch:7.0.1
+        #    container_name: elasticsearch2
+        #    environment:
+        #      - cluster.name=docker-cluster
+        #      - bootstrap.memory_lock=true
+        #      - "ES_JAVA_OPTS=-Xms1048m -Xmx1048m"
+        #      - "discovery.zen.ping.unicast.hosts=elasticsearch"
+        #    ulimits:
+        #      memlock:
+        #        soft: -1
+        #        hard: -1
+        #    volumes:
+        #      - esdata2:/usr/share/elasticsearch/data
+        #      - ./elasticsearch2.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+        #      - ./hosts:/etc/hosts
+        #    networks:
+        #      - esnet
+
+volumes:
+  esdata1:
+    driver: local
+  esdata2:
+    driver: local
+  kibana:
+    driver: local
+
+networks:
+  esnet:

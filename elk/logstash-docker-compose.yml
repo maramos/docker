@@ -1,0 +1,16 @@
+version: '2.2'
+services:
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.0.1
+    container_name: logstash
+    volumes:
+      - ./ca.crt:/tmp/ca.crt
+      - ./logstash.conf:/usr/share/logstash/config/logstash.conf
+    ports:
+      - 4000:4000
+      - 5044:5044
+    networks:
+      - esnet
+
+networks:
+  esnet:
