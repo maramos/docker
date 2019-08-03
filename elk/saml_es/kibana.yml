@@ -1,0 +1,15 @@
+server.name: kibana
+server.host: "0"
+elasticsearch.hosts: http://elasticsearch:9200
+#elasticsearch.hosts: https://elasticsearch:9200
+elasticsearch.ssl.verificationMode: none
+#xpack.monitoring.ui.container.elasticsearch.enabled: true
+
+#elasticsearch.username: ""
+#elasticsearch.password: "mk47703."
+
+#server.ssl.enabled: true
+#server.ssl.key: /usr/share/kibana/config/test.key
+#server.ssl.certificate: /usr/share/kibana/config/test.crt
+#
+#elasticsearch.ssl.verificationMode: none

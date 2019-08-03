@@ -1,0 +1,70 @@
+version: '2.2'
+services:
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.2.0
+    container_name: kibana
+    environment:
+      - ELASTICSEARCH_URL="http://elasticsearch:9200"
+    volumes:
+      - ./kibana.yml:/usr/share/kibana/config/kibana.yml
+    ports:
+      - 5601:5601
+    depends_on:
+      - es01
+    networks:
+      - esnet
+
+  es01:
+    container_name: es01
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.2.0
+    environment:
+      - node.name=es01
+      - discovery.seed_hosts=es01,es02
+      - cluster.initial_master_nodes=es01,es02
+      - ELASTIC_PASSWORD=$ELASTIC_PASSWORD 
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+      - xpack.license.self_generated.type=trial 
+      - xpack.security.enabled=true
+      - xpack.security.http.ssl.enabled=true
+      - xpack.security.http.ssl.key=$CERTS_DIR/es01/es01.key
+      - xpack.security.http.ssl.certificate_authorities=$CERTS_DIR/ca/ca.crt
+      - xpack.security.http.ssl.certificate=$CERTS_DIR/es01/es01.crt
+      - xpack.security.transport.ssl.enabled=true
+      - xpack.security.transport.ssl.verification_mode=certificate 
+      - xpack.security.transport.ssl.certificate_authorities=$CERTS_DIR/ca/ca.crt
+      - xpack.security.transport.ssl.certificate=$CERTS_DIR/es01/es01.crt
+      - xpack.security.transport.ssl.key=$CERTS_DIR/es01/es01.key
+    volumes: ['data01:/usr/share/elasticsearch/data', 'certs:$CERTS_DIR', './etc/hosts_es:/etc/hosts']
+    ports:
+      - 9200:9200
+    healthcheck:
+      test: curl --cacert $CERTS_DIR/ca/ca.crt -s https://localhost:9200 >/dev/null; if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+
+  wait_until_ready:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.2.0
+    command: /usr/bin/true
+    depends_on: {"es01": {"condition": "service_healthy"}}
+
+  idp:
+    image: kristophjunge/test-saml-idp
+    container_name: idp
+    environment:
+      - SIMPLESAMLPHP_SP_ENTITY_ID=http://app.idp.org
+      - SIMPLESAMLPHP_SP_ASSERTION_CONSUMER_SERVICE=http://idp/simplesaml/module.php/saml/sp/saml2-acs.php/test-sp
+      - SIMPLESAMLPHP_SP_SINGLE_LOGOUT_SERVICE=http://idp/simplesaml/module.php/saml/sp/saml2-logout.php/test-sp
+    volumes:
+      - ./etc/hosts_idp:/etc/hosts
+    ports:
+      - 8080:8080
+      - 8443:8443
+    networks:
+      - esnet
+
+volumes: {"data01", "certs"}
+
+networks:
+  esnet:
