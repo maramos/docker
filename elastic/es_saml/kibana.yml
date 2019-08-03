@@ -1,0 +1,7 @@
+elasticsearch.hosts: "https://es01:9200"
+server.host: "0"
+elasticsearch.username: "test"
+elasticsearch.password: "test1234"
+elasticsearch.ssl.certificateAuthorities: /tmp/certs/ca/ca.crt
+xpack.security.authProviders: [saml]
+server.xsrf.whitelist: [/api/security/v1/saml]
